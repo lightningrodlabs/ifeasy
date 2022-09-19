@@ -1,0 +1,18 @@
+---
+manifest_version: "1"
+name: ifeasy
+integrity:
+  uuid: 00000000-0000-0000-0000-000000000000
+  properties: ~
+  origin_time: 2022-09-19T20:37:17.515Z
+  zomes:
+    - name: ifeasy_integrity
+      bundled: ../../target/wasm32-unknown-unknown/release/ifeasy_integrity.wasm
+
+coordinator:
+  zomes:
+    - name: ifeasy
+      bundled: ../../target/wasm32-unknown-unknown/release/ifeasy.wasm
+      dependencies:
+        - name: ifeasy_integrity
+

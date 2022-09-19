@@ -1,0 +1,17 @@
+---
+manifest_version: "1"
+name: ifeasy
+description: ~
+roles:
+
+  - id: ifeasy
+    provisioning:
+      strategy: create
+      deferred: false
+    dna:
+      bundled: "../dna/workdir/ifeasy.dna"
+      properties: ~
+      uuid: ~
+      version: ~
+      clone_limit: 0
+
