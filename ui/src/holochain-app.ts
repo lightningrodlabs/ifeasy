@@ -45,8 +45,6 @@ export class HolochainApp extends LitElement {
 
     return html`
       <main>
-        <h1>ifeasy</h1>
-
         <create-ifeasy @ifeasy-created=${(e: CustomEvent) => this.actionHash = e.detail.actionHash}></create-ifeasy>
     ${this.actionHash ? html`
       <ifeasy-detail .actionHash=${this.actionHash}></ifeasy-detail>
