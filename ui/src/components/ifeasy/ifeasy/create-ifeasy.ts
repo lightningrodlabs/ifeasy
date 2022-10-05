@@ -122,7 +122,7 @@ export class CreateIfeasy extends LitElement {
     const active = this._items.map((item, i)=>{
       const words:any = TYPES.map((type) => {
         //@ts-ignore
-        return html`<div clgiass="word">${item[type]}</div>`
+        return html`<div class="word">${item[type]}</div>`
       })
       const matches = item.matches.map((match) => {
         return html`<div class="match">${match}</div>`
