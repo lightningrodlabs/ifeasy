@@ -1,7 +1,7 @@
 
 export const TYPES: Array<string> = ["verb", "what", "where", "when"]
-export const OFFER: string = "will"
-export const REQUEST: string = "want"
+export const OFFER: string = "offer"
+export const REQUEST: string = "need"
 
 export interface Ifeasy {
   content: string;

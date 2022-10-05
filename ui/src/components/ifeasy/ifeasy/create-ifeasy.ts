@@ -130,7 +130,7 @@ export class CreateIfeasy extends LitElement {
       return html`<div class="active-item"><div class="words">${words}<input type="text" id="content-${i}"
       style="margin-top: 16px"
       ></input>
-      <div class="match-button" @click=${() => this.match(i)}> If Easy </div></div><div class="matches">${matches}</div></div>`
+      <div class="match-button" @click=${() => this.match(i)}> Its Easy! </div></div><div class="matches">${matches}</div></div>`
     })
 
   return html`
