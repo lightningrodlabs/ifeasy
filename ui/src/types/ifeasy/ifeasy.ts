@@ -1,5 +1,5 @@
 
-export const TYPES: Array<string> = ["verb", "what", "where", "when"]
+export const TYPES: Array<string> = ["who","verb", "what", "where", "when", ]
 export const OFFER: string = "offer"
 export const REQUEST: string = "need"
 

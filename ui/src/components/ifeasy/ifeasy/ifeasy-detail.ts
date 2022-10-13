@@ -62,14 +62,10 @@ export class IfeasyDetail extends LitElement {
     return html`
       <div style="display: flex; flex-direction: column">
         <span style="font-size: 18px">Ifeasy</span>
-
-        
-    <content-detail
-    
-    .value=${this._ifeasy.content}
-      style="margin-top: 16px"
-    ></content-detail>
-
+        <content-detail
+          .value=${this._ifeasy.content}
+          style="margin-top: 16px">
+        </content-detail>
       </div>
     `;
   }

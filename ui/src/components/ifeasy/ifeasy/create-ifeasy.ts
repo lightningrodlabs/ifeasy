@@ -1,10 +1,10 @@
 
 import { LitElement, html, css } from 'lit';
-import { state, customElement, property } from 'lit/decorators.js';
-import { InstalledCell, AppWebsocket, InstalledAppInfo } from '@holochain/client';
+import { state, customElement, property, query } from 'lit/decorators.js';
+import { AppWebsocket, InstalledAppInfo } from '@holochain/client';
 import { contextProvided } from '@lit-labs/context';
 import { appWebsocketContext, appInfoContext } from '../../../contexts';
-import { Ifeasy, IfeasyItem, TYPES, IfEasyOptions, OFFER, REQUEST } from '../../../types/ifeasy/ifeasy';
+import { IfeasyItem, TYPES, IfEasyOptions, OFFER, REQUEST } from '../../../types/ifeasy/ifeasy';
 import '@material/mwc-button';
 import '@type-craft/content/create-content';
 
@@ -13,8 +13,19 @@ export class CreateIfeasy extends LitElement {
 
   @property()
   _who: string = "zippy"
-  @state()
-  _content: string | undefined;
+  // @state()
+  // _content: string | undefined;
+
+  @query('#who')
+  _who_el?: HTMLInputElement;
+  @query('#verb')
+  _verb_el?: HTMLInputElement;
+  @query('#what')
+  _what_el?: HTMLInputElement;
+  @query('#where')
+  _where_el?: HTMLInputElement;
+  @query('#when')
+  _when_el?: HTMLInputElement;
 
   @state()
   _selected: { [key: string]: string } = {who: "i"}
@@ -43,7 +54,7 @@ export class CreateIfeasy extends LitElement {
   _options: IfEasyOptions =
     {
       who: ["i","zippy","jean"],
-      verb: [OFFER, REQUEST],
+      verb: ["can", "'m offerings", OFFER, REQUEST],
       what: ["shop","baby-sit","drive to", "ride to","clean"],
       where: ["price chopper","home","chatham","troy","albany"],
       when: ["today","tommorow","this week","this month","sometime"],
@@ -68,6 +79,18 @@ export class CreateIfeasy extends LitElement {
   resetSelected() {
     this._selected = {who: "i"}
   }
+  handleEnter(event: KeyboardEvent) {
+    //tab key has been pressed
+    if (event.key === 'Enter') {
+      const type = (event.target as HTMLInputElement).id;
+      const value = (event.target as HTMLInputElement).value;
+      this._options[type as keyof typeof this._options].unshift(value);
+      console.log(this._options);
+      this.selectItem(type, value);
+      // add text as 
+    }
+  }
+
   async createIfeasy() {
 
     const item : IfeasyItem = {
@@ -115,7 +138,12 @@ export class CreateIfeasy extends LitElement {
         var items = this._options[type].map((item) => {
         return html`<div class='col-entry ${this._selected[type] == item ? 'selected': ''}' @click=${() => this.selectItem(type, item)}>${item}</div>`
       })
-      items.unshift(html`<div class="${this._selected[type] ? '':'not-filled'}">${this._selected[type] ? this._selected[type] : `${type}`}</div>`)
+      if (!this._selected[type]) {
+        items.unshift(html`<input id=${type} class='call-input' placeholder=${type} @keypress=${this.handleEnter}></input>`)
+      } else {
+        items.unshift(html`<div class="${this._selected[type] ? '':'not-filled'}">${this._selected[type] ? this._selected[type] : `${type}`}</div>`)
+      }
+      console.log(items);
       return html`<div class='column' id='${type}'>${items}</div>`
     })
 
@@ -134,7 +162,7 @@ export class CreateIfeasy extends LitElement {
     })
 
   return html`
-      <h1>If Easy: call</h1>
+      <h1>If Easy</h1>
       <mwc-button 
           label="If Easy"
           .disabled=${!this.isIfeasyValid()}
@@ -148,14 +176,7 @@ export class CreateIfeasy extends LitElement {
 
     `;
   }
-  /*
 
-        <create-content 
-      
-      @change=${(e: Event) => this._content = (e.target as any).value}
-      style="margin-top: 16px"
-      ></create-content>
-      */
   static styles = [
     css`
       mwc-button {
@@ -169,6 +190,9 @@ export class CreateIfeasy extends LitElement {
       }
       .active-items {
         display: flex; flex-direction: column
+      }
+      .call-input {
+        margin: 2px;
       }
       .words {
         display: flex; flex-direction: row
