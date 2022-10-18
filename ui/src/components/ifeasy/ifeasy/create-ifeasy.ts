@@ -29,9 +29,6 @@ export class CreateIfeasy extends LitElement {
   _selected: {[key:string]: string} = {who: "i"};
 
   @state()
-  _what: string = ''
-
-  @state()
   _items: Array<IfeasyItem> = [
     {
       who: "zippy",
@@ -82,10 +79,10 @@ export class CreateIfeasy extends LitElement {
   appInfo!: InstalledAppInfo;
 
   createIfeasy() {
-    const whats: Record<string, Detail> = {};
-    this._what.split(",").forEach((what) => {
-      whats[what] = {} as Detail;
-    });
+    const whats: Record<string, Detail> = {} as Record<string, Detail>;
+    this._selected.what.split(",").forEach((thing) => {
+      whats[thing] = {} as Detail;
+    })
     const item : IfeasyItem = {
       who: this._selected.who,
       call: this._selected.call,
@@ -100,8 +97,8 @@ export class CreateIfeasy extends LitElement {
     return;
   }
 
-  selectItem(type: string | Record<string, Array<string>> , item: string) {
-    this._selected[type as string] = item
+  selectItem(type: string, item: string) {
+    this._selected[type] = item
     this.requestUpdate()
   }
 
@@ -138,17 +135,25 @@ export class CreateIfeasy extends LitElement {
 
   isEasy(i: number, key: string) {
     // person adds name to list
-    console.log(this._items[i]!.what![key]);
     this._items[i].what![key]!.easyFor = [];
     this._items[i].what![key]!.easyFor?.push(this._who);
-    console.log('a: ', this._items[i].what![key]!.easyFor);
     this.requestUpdate();
   }
 
   wasEasy(i: number, key: string) {
     // strike through name of thing
     this._items[i].what![key]!.wasEasyFor = this._who;
-    this.requestUpdate();
+    this.requestUpdate()
+  }
+
+  isComplete(item: IfeasyItem): boolean {
+    let isComplete = true;
+    Object.values(item.what as Record<string, Detail>).forEach((thing) => {
+      if (!thing.hasOwnProperty('wasEasyFor')) {
+        isComplete = false;
+      }
+    });
+    return isComplete;
   }
 
   render() {
@@ -164,6 +169,8 @@ export class CreateIfeasy extends LitElement {
     })
 
     const active = this._items.map((item, i) => {
+
+      if (this.isComplete(item)) {return};
       
       const words:any = Object.keys(item).map((type) => {
         if (type === "who") {
@@ -214,8 +221,6 @@ export class CreateIfeasy extends LitElement {
       return html`
         <div class="active-item">
           <div class="words">${words}
-          <div class="match-button" @click=${() => {}}>All Easy</div>
-          <div class="match-button" @click=${() => {}}>All Done</div>
         </div>
           <input class="what-input" type="text" placeholder="Add New Things" id="content-${i}" @keypress=${(event: KeyboardEvent)=>this.addWhat(event, i)}></input>
           <div class="detail-container">
