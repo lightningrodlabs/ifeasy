@@ -4,7 +4,7 @@ import { state, customElement, property, query } from 'lit/decorators.js';
 import { AppWebsocket, InstalledAppInfo } from '@holochain/client';
 import { contextProvided } from '@lit-labs/context';
 import { appWebsocketContext, appInfoContext } from '../../../contexts';
-import { IfeasyItem, TYPES, IfEasyOptions, OFFER, REQUEST } from '../../../types/ifeasy/ifeasy';
+import { IfeasyItem, TYPES, OFFER, REQUEST, Detail } from '../../../types/ifeasy/ifeasy';
 import '@material/mwc-button';
 import '@type-craft/content/create-content';
 
@@ -13,8 +13,6 @@ export class CreateIfeasy extends LitElement {
 
   @property()
   _who: string = "zippy"
-  // @state()
-  // _content: string | undefined;
 
   @query('#who')
   _who_el?: HTMLInputElement;
@@ -28,53 +26,53 @@ export class CreateIfeasy extends LitElement {
   _when_el?: HTMLInputElement;
 
   @state()
-  _proposition_count: number = 1;
+  _selected: {[key:string]: string} = {who: "i"};
 
   @state()
-  _selected: { [key: string] : string } = {who: "i"};
+  _what: string = ''
 
   @state()
   _items: Array<IfeasyItem> = [
     {
       who: "zippy",
-      call: OFFER,
-      action: "shop",
-      preposition: "at",
+      call: REQUEST,
+      what: {
+        "dozen eggs": {wasEasyFor: 'alex'} as Detail, 
+        "mushrooms": {} as Detail
+      },
       where: "price chopper",
-      what: "dozen eggs, mushrooms",
-      when: "today",
-      matches: []
+      when: "today"
     },
     {
       who: "jean",
       call: REQUEST,
-      action: "ride",
-      preposition: "to",
+      what: {"pickup": {} as Detail},
       where: "albany",
-      when: "tommorow",
-      matches: ["Eric can at 10:15", "zippy can at 2:30"]
+      when: "tommorow"
+    },
+    {
+      who: "alex",
+      call: REQUEST,
+      what: {},
+      where: "The Bee Store",
+      when: "sometime"
     }
   ]
 
   @state()
   _options: Record<string, Array<string>> =
     {
-      who: ["i", "zippy", "jean"],
+      who: ["i"],
       call: [OFFER, REQUEST],
-      action: ["shop", "baby-sit", "drive", "ride", "clean"],
-      preposition: ["at", "from", "to", "on"],
+      what: [],
       where: ["price chopper", "home", "chatham", "troy", "albany"],
-      what: ["bananas", "appointment", "book"],
       when: ["today", "tommorow", "this week", "this month", "sometime"]
     }
 
-    get count(): string {
-      return (this._proposition_count as unknown )as string;
-    }
-
   isIfeasyValid() {
-    const cols = TYPES.map((type) => this._selected[type]).filter(e => e)
-    return cols.length == TYPES.length
+    return true;
+    // const cols = TYPES.map((type) => this._selected[type]).filter(e => e)
+    // return cols.length > 3;
   }
 
   @contextProvided({ context: appWebsocketContext })
@@ -83,20 +81,34 @@ export class CreateIfeasy extends LitElement {
   @contextProvided({ context: appInfoContext })
   appInfo!: InstalledAppInfo;
 
-  selectItem(type: string, item: string) {
-    console.log(type, item);
-    if (item === "at" || item === "from" || item === "on" || item === "to") {
-      if (!this._selected[type]) {
-        this._options[`preposition-${this.count}`] = ["at", "from", "to", "on"];
-        this._proposition_count++;
-      }
+  createIfeasy() {
+    const whats: Record<string, Detail> = {};
+    this._what.split(",").forEach((what) => {
+      whats[what] = {} as Detail;
+    });
+    const item : IfeasyItem = {
+      who: this._selected.who,
+      call: this._selected.call,
+      action: this._selected.action,
+      where: this._selected.where,
+      what: whats,
+      when: this._selected.when
     }
-    this._selected[type] = item
+    this._items.push(item)
+    this.resetSelected()
+    this.requestUpdate()
+    return;
+  }
+
+  selectItem(type: string | Record<string, Array<string>> , item: string) {
+    this._selected[type as string] = item
     this.requestUpdate()
   }
+
   resetSelected() {
     this._selected = {who: "i"}
   }
+
   handleEnter(event: KeyboardEvent) {
     // Enter key has been pressed
     if (event.key === 'Enter') {
@@ -104,64 +116,39 @@ export class CreateIfeasy extends LitElement {
       const value = (event.target as HTMLInputElement).value;
       this._options[type as keyof typeof this._options].unshift(value);
       this.selectItem(type, value);
-      // focus on next input
-      const keys: Array<string> = Object.keys(this._options)
-      // get index of key, increment, get option
-      const nextInput = keys[keys.indexOf(type) + 1];
-      const nextEl: HTMLInputElement | null = this.renderRoot?.querySelector(`#${nextInput}`);
-      // XXX - not working
-      nextEl?.focus();
     }
   }
 
-  async createIfeasy() {
-    const item : IfeasyItem = {
-      who: this._selected.who,
-      call: '',
-      action: this._selected.action,
-      preposition: 'to',
-      where: this._selected.where,
-      what: this._selected.what,
-      when: this._selected.when,
-      matches: [],
-    }
-    this._items.push(item)
-    this.resetSelected()
-    this.requestUpdate()
-    return 
-/*
-    const cellData = this.appInfo.cell_data.find((c: InstalledCell) => c.role_id === 'ifeasy')!;
-    const actionHash = await this.appWebsocket.callZome({
-      cap_secret: null,
-      cell_id: cellData.cell_id,
-      zome_name: 'ifeasy',
-      fn_name: 'create_ifeasy',
-      payload: ifeasy,
-      provenance: cellData.cell_id[1]
-    });
-
-    this.dispatchEvent(new CustomEvent('ifeasy-created', {
-      composed: true,
-      bubbles: true,
-      detail: {
-        actionHash
+  addWhat(event: KeyboardEvent, index: number) {
+    // Enter key has been pressed
+    if (event.key === 'Enter') {
+      // get handle on element that event came from
+      const elem = this.renderRoot.querySelector(`#content-${index}`) as HTMLInputElement | null;
+      if (elem?.value) {
+        const item = this._items[index]
+        const whats = elem.value.split(',');
+        whats!.forEach((what) => {
+          item.what![what] = {} as Detail;
+        })
+        elem.value = '';
+        this.requestUpdate()
       }
-    }));*/
-  }
-  match(index: number) {
-    const elem = this.renderRoot.querySelector(`#content-${index}`) as HTMLInputElement |null;
-    if (elem?.value) {
-      const item = this._items[index]
-      item.matches!.push(`${this._who} ${item.action == OFFER ? REQUEST : OFFER} ${elem.value}`)
-      this.requestUpdate()
     }
   }
 
-  spell() {
-    const phrase = Object.values(this._selected).join(" ");
-    return html`
-      <p>${phrase}</p>
-    `;
+  isEasy(i: number, key: string) {
+    // person adds name to list
+    console.log(this._items[i]!.what![key]);
+    this._items[i].what![key]!.easyFor = [];
+    this._items[i].what![key]!.easyFor?.push(this._who);
+    console.log('a: ', this._items[i].what![key]!.easyFor);
+    this.requestUpdate();
+  }
+
+  wasEasy(i: number, key: string) {
+    // strike through name of thing
+    this._items[i].what![key]!.wasEasyFor = this._who;
+    this.requestUpdate();
   }
 
   render() {
@@ -173,43 +160,88 @@ export class CreateIfeasy extends LitElement {
       if (!this._selected[type]) {
         items.unshift(html`<input id=${type} class='call-input' placeholder=${type} @keypress=${this.handleEnter}></input>`)
       }
-      // } else {
-      //   items.unshift(html`<div class="${this._selected[type] ? '':'not-filled'}">${this._selected[type] ? this._selected[type] : `${type}`}</div>`)
-      // }
       return html`<div class='column' id='${type}'>${items}</div>`
     })
 
-    const active = this._items.map((item, i)=>{
-      const words:any = TYPES.map((type) => {
-        //@ts-ignore
-        return html`<div class="word">${item[type]}</div>`
-      })
-      const matches = item.matches!.map((match) => {
-        return html`<div class="match">${match}</div>`
-      })
-      return html`<div class="active-item"><div class="words">${words}<input type="text" id="content-${i}"></input>
-      <div class="match-button" @click=${() => this.match(i)}>Easy</div></div><div class="matches">${matches}</div></div>`
+    const active = this._items.map((item, i) => {
+      
+      const words:any = Object.keys(item).map((type) => {
+        if (type === "who") {
+          return html`<div class="word">${item["who"]}</div>`
+        }
+        if (type === "call") {
+          return html`<div class="word">${item["call"]}s</div>`
+        } 
+        if (type === "what") {
+          const length = Object.keys(item["what"] as Record<string, Detail>).length;
+          return html`<div class="word">${length} thing${length == 1 ? '': 's'}</div>`
+        }
+        if (type === "where") {
+          return html`<div class="word">at ${item["where"]}</div>`
+        }
+        if (type === "when") {
+          return html`<div class="word">${item["when"]}</div>`
+        }
+      });
+
+      /**
+       * TODO
+       * - strike through on complete
+       * - render name if Easy clicked
+       * - render name if Done clicked
+       * - Put name for all if All Easy clicked
+       * - Put name for done if All Done clicked
+       */
+      const whatEntries: Record<string, Detail> = item["what"]!; 
+
+      const what: any = [];
+      for (const [key, value] of Object.entries(whatEntries)) {
+        const detail: Detail = value ? value : {} as Detail;
+
+        what.push(html`
+          <ul>
+            <li>
+              <span class="${detail.wasEasyFor ? 'done' : ''}">${key}</span>
+              <span class="easy-button" @click=${() => this.isEasy(i, key)}>Easy</span>
+              <span class="${detail.easyFor ? '' : 'hide'}">for ${detail.easyFor}</span>
+              <span class="easy-button" @click=${() => this.wasEasy(i, key)}>Done</span>
+              <span class="${detail.wasEasyFor ? '' : 'hide'}">by ${detail.wasEasyFor}</span>
+            </li>
+          </ul>
+        `);
+      };
+
+      return html`
+        <div class="active-item">
+          <div class="words">${words}
+          <div class="match-button" @click=${() => {}}>All Easy</div>
+          <div class="match-button" @click=${() => {}}>All Done</div>
+        </div>
+          <input class="what-input" type="text" placeholder="Add New Things" id="content-${i}" @keypress=${(event: KeyboardEvent)=>this.addWhat(event, i)}></input>
+          <div class="detail-container">
+            <div class="detail-container-column-what">
+              <div class="what">${what}</div>
+            </div>
+        </div>
+      </div>`
     })
 
-
-
   return html`
-      <h1>If Easy</h1>
-      <div class="phrase">
-        ${this.spell()}
-        <mwc-button 
-          label="If Easy"
-          .disabled=${!this.isIfeasyValid()}
-          @click=${() => this.createIfeasy()}
-        ></mwc-button>
-  </div>
-
-      <div class="columns">
-        ${cols}
-      </div>
-        <h1>If Easy: response</h1>
-        <div class="items">${active}</div>
-    `;
+    <h1>If Easy - Matter Moving</h1>
+    <div class="phrase">
+      <p>${Object.values(this._selected).join(" ")}</p>
+      <mwc-button 
+        label="If Easy"
+        .disabled=${!this.isIfeasyValid()}
+        @click=${() => this.createIfeasy()}
+      ></mwc-button>
+    </div>
+    <div class="columns">
+      ${cols}
+    </div>
+      <h1>If Easy: response</h1>
+      <div class="items">${active}</div>
+  `;
   }
 
   static styles = [
@@ -234,6 +266,9 @@ export class CreateIfeasy extends LitElement {
       .active-items {
         display: flex; flex-direction: column
       }
+      .hide {
+        visibility: hidden;
+      }
       .phrase {
         width: 75%;
         margin: 1em auto 1em;  
@@ -255,7 +290,10 @@ export class CreateIfeasy extends LitElement {
         border-radius: 5px;
       }
       .matches {
-        display: flex; flex-direction: column
+        display: flex; flex-direction: column;
+      }
+      .done {
+        text-decoration: line-through;
       }
       .match {
         margin: 5px;
@@ -266,6 +304,14 @@ export class CreateIfeasy extends LitElement {
         border-radius: 5px;
       }
       .match-button {
+        margin: 5px;
+        padding: 5px;
+        background-color: lightgreen;
+        border: solid 1px;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+      .easy-button {
         margin: 5px;
         padding: 5px;
         background-color: lightgreen;
@@ -290,6 +336,29 @@ export class CreateIfeasy extends LitElement {
       }
       .content {
         display: flex; flex-direction: column
+      }
+      .what {
+        text-align: justify
+      }
+      .what-input {
+        text-align: justify
+      }
+      .detail-container {
+        display: flex;
+        flex-direction: row
+      }
+      .detail-container-column-what {
+        flex: 1;
+        display: flex;
+        flex-direction: column
+      }
+      .detail-container-column-match {
+        flex: 2;
+        display: flex;
+        flex-direction: column
+      }
+      ul {
+        list-style-type:none;
       }
     `,
   ];

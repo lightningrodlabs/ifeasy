@@ -1,30 +1,31 @@
 
-export const TYPES: Array<string> = ["who", "call" , "action", "preposition", "where", "what", "when"];
+export const TYPES: Array<string> = ["who", "call", "what", "where",  "when"];
 export const OFFER: string = "offer"
 export const REQUEST: string = "need"
-export type PREPOSITION = "at" | "to" | "on" | "from";
 
 export interface Ifeasy {
   content: string;
 }
 
-export interface IfeasyItem {
+export type Detail = {
+  easyFor: Array<string>;
+  wasEasyFor?: string;
+}
+
+export type IfeasyItem  = {
   who: string
   call?: string;
+  what?: Record<string, Detail>;
   action?: string;
-  preposition?: PREPOSITION;
   where?: string;
-  what?: string;
   when?: string;
-  matches?: Array<string>;
 }
 
 export interface IfEasyOptions {
   who: Array<string>;
   call: Array<string>;
-  action: Array<string>;
-  preposition: Array<string>;
-  where: Array<string>;
   what: Array<string>;
+  action: Array<string>;
+  where: Array<string>;
   when: Array<string>;
 }
