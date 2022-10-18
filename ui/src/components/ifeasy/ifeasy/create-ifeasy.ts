@@ -156,6 +156,11 @@ export class CreateIfeasy extends LitElement {
     return isComplete;
   }
 
+  /*
+  * remove easy button when done
+  * Turn done into text when done
+  */
+
   render() {
     const cols = Object.keys(this._options).map((type) => {
         // @ts-ignore
@@ -209,10 +214,10 @@ export class CreateIfeasy extends LitElement {
           <ul>
             <li>
               <span class="${detail.wasEasyFor ? 'done' : ''}">${key}</span>
-              <span class="easy-button" @click=${() => this.isEasy(i, key)}>Easy</span>
-              <span class="${detail.easyFor ? '' : 'hide'}">for ${detail.easyFor}</span>
-              <span class="easy-button" @click=${() => this.wasEasy(i, key)}>Done</span>
-              <span class="${detail.wasEasyFor ? '' : 'hide'}">by ${detail.wasEasyFor}</span>
+              <span class="easy-button ${detail.wasEasyFor ? 'remove' : ''}" @click=${() => this.isEasy(i, key)}>${item.call === REQUEST ? "It's Easy": "Yes, Please"}</span>
+              <span class="${detail.easyFor ? '' : 'hide'} ${detail.wasEasyFor ? 'remove' : ''}">${item.call === REQUEST ? "for": "from"} ${detail.easyFor}</span>
+              <span class="easy-button ${detail.wasEasyFor ? 'remove' : ''}" @click=${() => this.wasEasy(i, key)}>Done</span>
+              <span class="${detail.wasEasyFor ? '' : 'hide'}">Done by ${detail.wasEasyFor}</span>
             </li>
           </ul>
         `);
@@ -273,6 +278,9 @@ export class CreateIfeasy extends LitElement {
       }
       .hide {
         visibility: hidden;
+      }
+      .remove {
+        display: none;
       }
       .phrase {
         width: 75%;
@@ -346,7 +354,7 @@ export class CreateIfeasy extends LitElement {
         text-align: justify
       }
       .what-input {
-        text-align: justify
+        margin-left: -65%
       }
       .detail-container {
         display: flex;
