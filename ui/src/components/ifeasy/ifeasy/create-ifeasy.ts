@@ -227,12 +227,12 @@ export class CreateIfeasy extends LitElement {
         <div class="active-item">
           <div class="words">${words}
         </div>
-          <input class="what-input" type="text" placeholder="Add New Things" id="content-${i}" @keypress=${(event: KeyboardEvent)=>this.addWhat(event, i)}></input>
-          <div class="detail-container">
-            <div class="detail-container-column-what">
-              <div class="what">${what}</div>
-            </div>
+        <div class="detail-container">
+          <div class="detail-container-column-what">
+            <div class="what">${what}</div>
+          </div>
         </div>
+        <input class="what-input" type="text" placeholder="Add New Things" id="content-${i}" @keypress=${(event: KeyboardEvent)=>this.addWhat(event, i)}></input>
       </div>`
     })
 
